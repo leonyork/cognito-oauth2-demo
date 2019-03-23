@@ -1,0 +1,132 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: auth-demo
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+# frameworkVersion: "=X.X.X"
+
+provider:
+  name: aws
+  runtime: nodejs8.10 #Ignored - we're just using this to deploy to S3
+
+plugins:
+  - serverless-s3-sync
+  - serverless-stack-output
+
+custom:
+  resourceName: ${opt:stage, self:provider.stage}-${self:service}
+  s3Sync:
+    - bucketName: ${self:custom.resourceName}
+      localDir: dist
+      acl: public-read
+  output:
+    handler: scripts/post-deploy.handler
+
+# you can overwrite defaults here
+#  stage: dev
+#  region: us-east-1
+
+resources:
+  Resources:
+    #From https://serverless-stack.com/chapters/configure-cognito-user-pool-in-serverless.html
+    CognitoUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: ${self:custom.resourceName}
+        UsernameAttributes:
+          - email
+        AutoVerifiedAttributes:
+          - email
+    CognitoUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: ${self:custom.resourceName}
+        UserPoolId:
+          Ref: CognitoUserPool
+        ExplicitAuthFlows:
+          - ADMIN_NO_SRP_AUTH
+        GenerateSecret: false
+    StaticSite:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.resourceName}
+    StaticSiteS3BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket:
+          Ref: StaticSite
+        PolicyDocument:
+          Statement:
+            - Sid: PublicReadGetObject
+              Effect: Allow
+              Principal:
+                CanonicalUser: !GetAtt TheCloudFrontOriginAccessIdentity.S3CanonicalUserId
+              Action:
+              - s3:GetObject
+              Resource:
+                Fn::Join: [
+                  "", [
+                    "arn:aws:s3:::",
+                    {
+                      "Ref": "StaticSite"
+                    },
+                    "/*"
+                  ]
+                ]
+    StaticSiteCloudFront:
+      Type: AWS::CloudFront::Distribution
+      Properties:
+        DistributionConfig:
+          Origins:
+          - DomainName: ${self:custom.resourceName}.s3.amazonaws.com
+            Id: ${self:custom.resourceName}
+            S3OriginConfig:
+              OriginAccessIdentity: !Join [ "", [ "origin-access-identity/cloudfront/", !Ref TheCloudFrontOriginAccessIdentity ] ]
+          Enabled: 'true'
+          DefaultRootObject: index.html
+          DefaultCacheBehavior:
+            TargetOriginId: ${self:custom.resourceName}
+            ViewerProtocolPolicy: redirect-to-https
+            ForwardedValues:
+              QueryString: true
+            AllowedMethods:
+            - HEAD
+            - GET
+            - OPTIONS
+          PriceClass: PriceClass_100
+          ViewerCertificate:
+            CloudFrontDefaultCertificate: 'true'
+
+    TheCloudFrontOriginAccessIdentity:
+      Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+      Properties:
+        CloudFrontOriginAccessIdentityConfig:
+          Comment: "Cloud front origin access"
+  # Print out the Id of the User Pool that is created
+  Outputs:
+    UserPoolId:
+      Value:
+        Ref: CognitoUserPool
+    UserPoolClientId:
+      Value:
+        Ref: CognitoUserPoolClient
+    DomainName:
+      Value: !GetAtt StaticSiteCloudFront.DomainName
+    ResourceName:
+      Value: ${self:custom.resourceName}
+    CloudFrontDistributionId:
+      Value:
+        Ref: StaticSiteCloudFront
+    
