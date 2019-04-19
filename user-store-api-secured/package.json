@@ -9,8 +9,8 @@
         "test": "jest",
         "unit": "jest src",
         "integration": "jest test/integration",
-        "deploy": "serverless deploy --force",
-        "remove": "serverless remove",
+        "deploy": "serverless deploy",
+        "destroy": "serverless remove",
         "offline": "serverless offline start"
     },
     "devDependencies": {

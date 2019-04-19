@@ -1,0 +1,6 @@
+{
+  "cloudfront-domain-name": "d2bgwft01osobn.cloudfront.net",
+  "token-issuer": "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_TvWbjnhNf",
+  "user-pool-client-id": "2li6f43hqst7ij6rskl37n0jva",
+  "user-pool-id": "us-east-1_TvWbjnhNf"
+}

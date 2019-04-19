@@ -33,9 +33,9 @@ npm run build
 ### Build and deploy
 The first time this is deployed it takes a while as it provisions a CloudFront distribution (15 mins or so)
 ```
-npm run deploy -- --stage some-stage
+npm run deploy
 ```
-Note that it will try and set a domain for your instance of Cognito. If this domain is already taken, then it won't be able to use that domain. You may want to change the name of the service in serverless.yml if this is the case.
+Note that it will try and set a domain for your instance of Cognito. If this domain is already taken, then it won't be able to use that domain. You may want to change the name of the service
 
 ### Lints and fixes files
 ```

@@ -12,7 +12,7 @@
           :sub-title="'PUT /user/' + userInfo.sub"
         >
           <b-card-text>
-            <b-form @submit="save">
+            <b-form @submit.prevent="save()">
               <div class="row">
                 <div class="col-sm-10">
                   <b-form-input
