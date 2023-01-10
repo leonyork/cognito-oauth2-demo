@@ -28,6 +28,6 @@
         "webpack": "^4.29.6"
     },
     "dependencies": {
-        "jwks-rsa": "^1.4.0"
+        "jwks-rsa": "^1.6.1"
     }
 }
